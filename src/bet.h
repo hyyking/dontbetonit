@@ -2,26 +2,18 @@
 using namespace std;
 
 #define PSIZE 3     //number of partitions per player
-#define PAMOUNT 2   //number of players
-
-bool empty[PSIZE][PSIZE] = {};
-
-struct Partition
-{
-    double proba;
-    bool posmatrix[PSIZE][PSIZE];
-};
-
-struct Players //Alpha & Beta
-{
-    Partition* alpha[PSIZE];
-    Partition* beta[PSIZE];
-};
+#define BORDER 0.5   //border win / lose knowing that alpha starts the bet
 
 enum Player
 {
     Alpha,
     Beta
+};
+
+struct Partition
+{
+    double proba;
+    bool posmatrix[PSIZE][PSIZE];
 };
 
 struct Event

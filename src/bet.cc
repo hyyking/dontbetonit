@@ -5,7 +5,6 @@
 
 int main()
 {
-    Players* players = (Players*) malloc(sizeof(Players));
     // Partition Alpha     || Partition Beta    
     Partition p1 = {0.5, 
         {
@@ -55,11 +54,7 @@ int main()
         }
     };
 
-    // Initialisation Alpha || Initialisation Beta
-    (players->alpha)[0] = &p1; (players->beta)[0] = &q1;
-    (players->alpha)[1] = &p2; (players->beta)[1] = &q2;
-    (players->alpha)[2] = &p3; (players->beta)[2] = &q3;
-    
+
     Event event = {0.6, 
         {   
             {0.06666666666666667, 0.5, 0.11666666666666667},
@@ -67,7 +62,6 @@ int main()
             {0.016666666666666666, 0.008333333333333333, 0.000}, 
         }
     };
-
 
     
     tuple<int, int> omega (1, 1); 
@@ -93,14 +87,17 @@ int main()
     {
         chainedState* last = (chainedState*) malloc(sizeof(chainedState));
         last->index = ++g_index;
-            
-        (last->alphastate)[0] = (upmost->alphastate)[0];  
-        (last->alphastate)[1] = (upmost->alphastate)[1];  
-        (last->alphastate)[2] = (upmost->alphastate)[2]; 
+        
+        //copy last state
+        {
+            (last->alphastate)[0] = (upmost->alphastate)[0];  
+            (last->alphastate)[1] = (upmost->alphastate)[1];  
+            (last->alphastate)[2] = (upmost->alphastate)[2]; 
 
-        (last->betastate)[0] = (upmost->betastate)[0];
-        (last->betastate)[1] = (upmost->betastate)[1];
-        (last->betastate)[2] = (upmost->betastate)[2];
+            (last->betastate)[0] = (upmost->betastate)[0];
+            (last->betastate)[1] = (upmost->betastate)[1];
+            (last->betastate)[2] = (upmost->betastate)[2];
+        }   
         
         if (g_index % 2 == 0)
         {
@@ -108,15 +105,15 @@ int main()
             bool emptyb[PSIZE][PSIZE] = {};
             bool emptya[PSIZE][PSIZE] = {};
 
-            for (int a = 0; a < PSIZE; a++) //U beta
+            for (int a = 0; a < PSIZE; a++) // U all beta partitions
                 if ((last->betastate)[a] != NULL)
                     uni(emptya, (last->betastate)[a]->posmatrix);
             
-            for (int a = 0; a < PSIZE; a++) //U alpha
+            for (int a = 0; a < PSIZE; a++) // U all alpha partitions
                 if ((last->alphastate)[a] != NULL)
-                    uni(emptyb, (last->alphastate)[a]->posmatrix);
+                    uni(emptyb, (last->alphastate)[a]->posmatrix); 
 
-            inter(emptya, emptyb); //alpha n beta
+            inter(emptya, emptyb); //alpha partitions n beta partitions
                     
             //checking for none usable partitions
             for (int i = 0; i < PSIZE; i++)
@@ -127,7 +124,7 @@ int main()
                         if (emptya[o][i])
                             probuff  += (event.partmatrix[o][i]*event.proba)/(last->betastate)[i]->proba;
                         
-                    if (probuff > 0.5 && (last->betastate)[i]->posmatrix[i][0] != (last->betastate)[get<1>(omega)-1]->posmatrix[i][0])
+                    if (probuff > BORDER && (last->betastate)[i]->posmatrix[i][0] != (last->betastate)[get<1>(omega)-1]->posmatrix[i][0])
                         (last->betastate)[i] = NULL;
                 }
             
@@ -138,7 +135,7 @@ int main()
                     buff  += (event.partmatrix[get<0>(omega)-1][d]*event.proba)/(last->alphastate)[get<0>(omega)-1]->proba;
 
             last->decided = buff;
-            if (buff < 0.5)
+            if (buff < BORDER)
                 alpha = false;
             
             stateHistory(last, event, emptya);   
@@ -168,7 +165,7 @@ int main()
                         if (emptya[i][o])
                             probuff += (event.partmatrix[i][o]*event.proba)/(last->alphastate)[i]->proba;
                     
-                    if (probuff < 0.5 && (last->alphastate)[i]->posmatrix[0][i] != (last->alphastate)[get<0>(omega)-1]->posmatrix[0][i])
+                    if (probuff < BORDER && (last->alphastate)[i]->posmatrix[0][i] != (last->alphastate)[get<0>(omega)-1]->posmatrix[0][i])
                         (last->alphastate)[i] = NULL;
                 }
 
@@ -178,7 +175,7 @@ int main()
                     buff  += (event.partmatrix[d][get<1>(omega)-1]*event.proba)/(last->betastate)[get<1>(omega)-1]->proba;
 
             last->decided = buff;
-            if (buff > 0.5)
+            if (buff > BORDER)
                 beta = false;
             
             stateHistory(last, event, emptya);   
@@ -195,11 +192,9 @@ int main()
     //FREE
     if (autoFree(initial) == 0)
     {
-        free(players);
         return 0;
     } else 
     {
-        free(players);
         return 1;
     }
 }
@@ -228,8 +223,6 @@ void uni(bool output[PSIZE][PSIZE], bool p[PSIZE][PSIZE])
                 output[i][o] = false;
             }
 }
-
-
 
 
 int autoFree(chainedState* head) //start to end
