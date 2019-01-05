@@ -1,0 +1,72 @@
+|0|
+        Player: Alpha
+        Decided: 0
+        Partitions:
+                Alpha
+                        P(A|p1): 0.82
+                        P(A|p2): 0.530303
+                        P(A|p3): 0.0882353
+                Beta
+                        P(A|q1): 0.275
+                        P(A|q2): 0.925
+                        P(A|q3): 0.6
+111
+111
+111
+|1|
+        Player: Beta
+        Decided: 0.275
+        Partitions:
+                Alpha
+                        P(A|p1): 0.82
+                        P(A|p2): 0.530303
+                        P(A|p3): NULL
+                Beta
+                        P(A|q1): 0.275
+                        P(A|q2): 0.925
+                        P(A|q3): 0.6
+111
+111
+000
+|2|
+        Player: Alpha
+        Decided: 0.82
+        Partitions:
+                Alpha
+                        P(A|p1): 0.82
+                        P(A|p2): 0.530303
+                        P(A|p3): NULL
+                Beta
+                        P(A|q1): 0.25
+                        P(A|q2): NULL
+                        P(A|q3): NULL
+100
+100
+000
+|3|
+        Player: Beta
+        Decided: 0.25
+        Partitions:
+                Alpha
+                        P(A|p1): 0.08
+                        P(A|p2): NULL
+                        P(A|p3): NULL
+                Beta
+                        P(A|q1): 0.25
+                        P(A|q2): NULL
+                        P(A|q3): NULL
+100
+000
+000
+|4|
+        Player: Alpha
+        Decided: 0.08
+        Partitions:
+                Alpha
+                        P(A|p1): 0.08
+                        P(A|p2): NULL
+                        P(A|p3): NULL
+                Beta
+                        P(A|q1): 0.1
+                        P(A|q2): NULL
+                        P(A|q3): NULL
