@@ -1,7 +1,7 @@
 #include <vector>
 using namespace std;
 
-#define PSIZE 3     //number of partitions per player
+#define PSIZE 3     //postulat que l'espace est carré
 #define BORDER 0.5   //border win / lose knowing that alpha starts the bet
 
 enum Player
