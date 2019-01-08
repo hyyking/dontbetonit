@@ -124,7 +124,7 @@ int main()
                         if (emptya[o][i])
                             probuff  += (event.partmatrix[o][i]*event.proba)/(last->betastate)[i]->proba;
                         
-                    if (probuff > BORDER && (last->betastate)[i]->posmatrix[i][0] != (last->betastate)[get<1>(omega)-1]->posmatrix[i][0])
+                    if (probuff > BORDER)
                         (last->betastate)[i] = NULL;
                 }
             
@@ -165,7 +165,7 @@ int main()
                         if (emptya[i][o])
                             probuff += (event.partmatrix[i][o]*event.proba)/(last->alphastate)[i]->proba;
                     
-                    if (probuff < BORDER && (last->alphastate)[i]->posmatrix[0][i] != (last->alphastate)[get<0>(omega)-1]->posmatrix[0][i])
+                    if (probuff < BORDER)
                         (last->alphastate)[i] = NULL;
                 }
 
