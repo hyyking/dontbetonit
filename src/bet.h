@@ -1,4 +1,3 @@
-#include <vector>
 using namespace std;
 
 #define PSIZE 3     //postulat que l'espace est carré
