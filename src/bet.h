@@ -1,45 +1,54 @@
+#include <vector>
+#include <iostream>
+#include <math.h>
+
+
 using namespace std;
-
-#define PSIZE 3     //postulat que l'espace est carré
-#define BORDER 0.5   //border win / lose knowing that alpha starts the bet
-
-enum Player
-{
-    Alpha,
-    Beta
-};
-
-struct Partition
-{
-    double proba;
-    bool posmatrix[PSIZE][PSIZE];
-};
 
 struct Event
 {
     double proba;
-    double partmatrix[PSIZE][PSIZE];
+    
+    //all proba associated to events in order
+    vector<double> subproba;
 };
 
-
-struct chainedState
+class Partition
 {
+private:
     int index;
-    double decided;
-    Player player;
+    int size;
 
-    Partition* alphastate[PSIZE];
-    Partition* betastate[PSIZE];
-    chainedState* next = NULL;
+public:    
+    double proba;
+    unsigned int table;
+
+    //OR operator
+
+    Partition(int, int, double);
+    unsigned int operator|(Partition& other);
+
+
 };
 
+Partition::Partition(int size, int index, double proba)
+: size(size), index(index), proba(proba)
+{
+    if (size >= index)
+    {
+        table = (unsigned int) (pow(2, size) - 1) << size*(index - 1);
+    } else
+    {
+        cout << "Couldn't create table for class: " << index << endl;
+    }
 
-/* Function prototypes */
+}
 
-void inter(bool output[PSIZE][PSIZE], bool p[PSIZE][PSIZE]);
-void uni(bool output[PSIZE][PSIZE], bool p[PSIZE][PSIZE]);
 
-int autoFree(chainedState*);
-void stateHistory(chainedState*, Event, bool empty[PSIZE][PSIZE]);
 
-void printTable(bool table[PSIZE][PSIZE]);
+unsigned int Partition::operator|(Partition& other)
+{
+    return table | other.table;
+}
+
+
