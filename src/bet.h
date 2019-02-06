@@ -10,45 +10,73 @@ struct Event
     double proba;
     
     //all proba associated to events in order
-    vector<double> subproba;
+    vector<double>* subproba;
 };
+
+enum class Players
+{
+    Alpha,
+    Beta,
+};
+
 
 class Partition
 {
 private:
     int index;
-    int size;
 
-public:    
+public:
+    int size;
+    Players type;
     double proba;
     unsigned int table;
 
     //OR operator
 
-    Partition(int, int, double);
-    unsigned int operator|(Partition& other);
+    Partition(Players, int, int, double);
+    void make_table();
+    //unsigned int operator|(Partition& other);
 
 
 };
 
-Partition::Partition(int size, int index, double proba)
-: size(size), index(index), proba(proba)
+Partition::Partition(Players type, int size, int index, double proba)
+: type(type), size(size), index(index), proba(proba)
 {
-    if (size >= index)
-    {
-        table = (unsigned int) (pow(2, size) - 1) << size*(index - 1);
-    } else
-    {
-        cout << "Couldn't create table for class: " << index << endl;
-    }
-
 }
 
 
-
+void Partition::make_table()
+{
+    switch (type)
+    {
+        case Players::Alpha:
+            if (size >= index) 
+            { 
+                table = (unsigned int) (pow(2, size) - 1) << size*(index - 1); 
+            } 
+            else
+            { 
+                cout << "Couldn't create table for class: " << index << endl; 
+            }        
+            break;
+        
+        case Players::Beta:
+            table = pow(2, size - 1);
+            for (int i = 0; i < size-1; i++)
+            {
+                unsigned int buffer = table;
+                table = table << size;
+                table = table | buffer;
+            }
+            table = table >> index-1;
+            break;
+    }
+}
+/*
 unsigned int Partition::operator|(Partition& other)
 {
     return table | other.table;
 }
-
+*/
 
