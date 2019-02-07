@@ -3,8 +3,8 @@
 void join(Partition**, unsigned int &size, const unsigned int);
 void create_tables(Partition**, unsigned int, unsigned int, const unsigned int);
 
-double* beta_logic(const unsigned long long, Event*, const unsigned int, const unsigned int);
-double* alpha_logic(const unsigned long long, Event*, const unsigned int, const unsigned int);
+double* beta_logic(const uint64_t, Event*, const unsigned int, const unsigned int);
+double* alpha_logic(const uint64_t, Event*, const unsigned int, const unsigned int);
 
 
 const unsigned int ALPHA_T = 4; //(doesn't mean effective sizes, just describes how big the line table will be)
@@ -18,7 +18,7 @@ int main()
 
     //Describing the event
     Event* event = (Event*) malloc(sizeof(Event));
-    vector<double> event_description = {
+    std::vector<double> event_description = {
         0.1, 0.1, 0.1, 0.1, 0.1,
         0.1, 0.1, 0.1, 0.1, 0.1,
     };
@@ -56,8 +56,8 @@ int main()
     Beta[0]->table = 0;
 
     //union of player partitions
-    unsigned long long alphau = 0;
-    unsigned long long betau = 0;
+    uint64_t alphau = 0;
+    uint64_t betau = 0;
     for (int i = 0; i < ALPHASIZE; i++)         //alpha
         alphau = alphau | Alpha[i]->table;        
     
@@ -65,14 +65,11 @@ int main()
         betau = betau | Beta[i]->table;
     
     //intersection of alpha and beta partitions (represents available space)
-    unsigned long long intersection = alphau & betau;
-    cout << alphau << "|" << betau << endl;
+    uint64_t intersection = alphau & betau;
 
     //reading columns of the intersection
     double* beta_rest = beta_logic(intersection, event, ALPHASIZE, BETASIZE);
     double* alpha_rest = alpha_logic(intersection, event, ALPHASIZE, BETASIZE);
-    cout << beta_rest[1] << endl;
-    cout << alpha_rest[1] << endl;    
     
     for (int i = 0; i < BETASIZE; i++)
         delete Beta[i];
@@ -159,7 +156,7 @@ void create_tables(Partition** part, unsigned int size, unsigned int o_size, con
     }
 }
 
-double* beta_logic(const unsigned long long intersection, Event* event, const unsigned int alpha_s, const unsigned int beta_s)
+double* beta_logic(const uint64_t intersection, Event* event, const unsigned int alpha_s, const unsigned int beta_s)
 {
     double* betares = (double*) malloc(sizeof(double) * beta_s);
     for (int o = 0; o < beta_s; o++)                                                          //for each column
@@ -167,7 +164,7 @@ double* beta_logic(const unsigned long long intersection, Event* event, const un
         double mid_res = 0;                                                                     //  create a new empty result
         for (int i = 0; i < alpha_s; i++)                                                     //  for each line
         {   
-            unsigned int bit_check = (unsigned int) pow(2, i*beta_s) << beta_s - 1 - o;     //      create the checking bit
+            uint64_t bit_check = (uint64_t) pow(2, i*beta_s) << beta_s - 1 - o;     //      create the checking bit
             if ((bit_check & intersection) > 0)                                                 //      check if the checking bit AND the intersection are on (checking bit will always be on)
             {
                 mid_res += (*(event->subproba))[o + i*beta_s];                                //          if it is read the event description and add it to the column result
@@ -178,7 +175,7 @@ double* beta_logic(const unsigned long long intersection, Event* event, const un
     return betares;
 }
 
-double* alpha_logic(const unsigned long long intersection, Event* event, const unsigned int alpha_s, const unsigned int beta_s)
+double* alpha_logic(const uint64_t intersection, Event* event, const unsigned int alpha_s, const unsigned int beta_s)
 {
     double* alphares = (double*) malloc(sizeof(double) * alpha_s);
     for (int o = 0; o < alpha_s; o++)                                                          //for each column
@@ -186,7 +183,7 @@ double* alpha_logic(const unsigned long long intersection, Event* event, const u
         double mid_res = 0;                                                                     //  create a new empty result
         for (int i = 0; i < beta_s; i++)                                                     //  for each line
         {   
-            unsigned int bit_check = (unsigned int) pow(2, i) << o*beta_s;     //      create the checking bit
+            uint64_t bit_check = (uint64_t) pow(2, i) << o*beta_s;     //      create the checking bit
             if ((bit_check & intersection) > 0)                                                 //      check if the checking bit AND the intersection are on (checking bit will always be on)
             {
                 mid_res += (*(event->subproba))[i];                                //          if it is read the event description and add it to the column result

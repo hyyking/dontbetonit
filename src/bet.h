@@ -1,9 +1,9 @@
 #include <vector>
 #include <iostream>
 #include <math.h>
+#include <cstdint>
 
-
-using namespace std;
+using std::uint64_t;
 
 struct Event
 {
@@ -14,7 +14,7 @@ struct Event
     unsigned int beta_info;
     
     //all proba associated to events in order
-    vector<double>* subproba;
+    std::vector<double>* subproba;
 };
 
 enum class Players
@@ -33,7 +33,7 @@ private:
 
 public:
     double proba;
-    unsigned long long table;
+    uint64_t table;
 
     Partition(Players, int, int, double);
     void make_table();
@@ -57,7 +57,7 @@ void Partition::make_table()
             } 
             else
             { 
-                cout << "Couldn't create table for class: " << index << endl; 
+                std::cout << "Couldn't create table for class: " << index << std::endl; 
             }        
             break;
         
@@ -75,7 +75,7 @@ void Partition::make_table()
             } 
             else
             { 
-                cout << "Couldn't create table for class: " << index << endl; 
+                std::cout << "Couldn't create table for class: " << index << std::endl; 
             }
             
             break;
