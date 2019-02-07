@@ -9,6 +9,10 @@ struct Event
 {
     double proba;
     
+    //omega
+    unsigned int alpha_info;
+    unsigned int beta_info;
+    
     //all proba associated to events in order
     vector<double>* subproba;
 };
@@ -23,21 +27,17 @@ enum class Players
 class Partition
 {
 private:
-    int index;
-
-public:
-    int size;
     Players type;
+public:
+    int index; //  shoulde be private
+    int size; //should be private
+    
     double proba;
     unsigned int table;
 
-    //OR operator
-
     Partition(Players, int, int, double);
     void make_table();
-    //unsigned int operator|(Partition& other);
-
-
+    void update_si(int, int);
 };
 
 Partition::Partition(Players type, int size, int index, double proba)
@@ -62,14 +62,22 @@ void Partition::make_table()
             break;
         
         case Players::Beta:
-            table = pow(2, size - 1);
-            for (int i = 0; i < size-1; i++)
-            {
-                unsigned int buffer = table;
-                table = table << size;
-                table = table | buffer;
+            if (size >= index) 
+            { 
+                table = pow(2, size - 1);
+                for (int i = 0; i < size-1; i++)
+                {
+                    unsigned int buffer = table;
+                    table <<= size;
+                    table |= buffer;
+                }
+                table = table >> index-1;
+            } 
+            else
+            { 
+                cout << "Couldn't create table for class: " << index << endl; 
             }
-            table = table >> index-1;
+            
             break;
     }
 }
@@ -80,3 +88,8 @@ unsigned int Partition::operator|(Partition& other)
 }
 */
 
+void Partition::update_si(int new_size, int new_index)
+{
+    size = new_size;
+    index = new_index;
+}

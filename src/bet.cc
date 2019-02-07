@@ -1,73 +1,83 @@
 #include "bet.h"
 
-void join(Partition**, unsigned int &size);
-void create_tables(Partition**, unsigned int);
+void join(Partition**, unsigned int &size, const unsigned int);
+void create_tables(Partition**, unsigned int, const unsigned int);
+
+double* beta_logic(const unsigned int, Event*, const unsigned int, const unsigned int);
+
+
+const unsigned int ALPHA_T = 4; //(doesn't mean effective sizes, just describes how big the line table will be)
+const unsigned int BETA_T = 5;  //(doesn't mean effective sizes, just describes how big the column table will be)
+
 
 int main()
 {
-        
-    unsigned int ALPHASIZE = 4; //line
-    unsigned int BETASIZE  = 5; //column
+    unsigned int ALPHASIZE = ALPHA_T; //lines     (effective sizes)
+    unsigned int BETASIZE  = BETA_T; //columns   (effective sizess)
 
-    unsigned int alpha_info = 3;
-    unsigned int beta_info = 2;
-
+    //Describing the event
     Event* event = (Event*) malloc(sizeof(Event));
     vector<double> event_description = {
-        0.125, 0.125, 0.125, 0.125,
-        0.125, 0.125, 0.125, 0.125,
+        /* 0.1, */ 0.1, 0.1, 0.1, 0.1,
+        /* 0.1,  */0.1, 0.1, 0.1, 0.1,
     };
     event->proba = 0.6;
     event->subproba = &event_description;
+    
+    event->alpha_info = 3;
+    event->beta_info = 2;
+    
 
-    Partition* Alpha[ALPHASIZE] = {
-        new Partition(Players::Alpha, ALPHASIZE, 1, 0.2),
-        new Partition(Players::Alpha, ALPHASIZE, 2, 0.8),
-        new Partition(Players::Alpha, ALPHASIZE, 3, 0),
-        new Partition(Players::Alpha, ALPHASIZE, 4, 0)
+    Partition* Alpha[ALPHA_T] = {                         //creating new partitions for player Alpha
+        new Partition(Players::Alpha, ALPHA_T, 1, 0.2),
+        new Partition(Players::Alpha, ALPHA_T, 2, 0.8),
+        new Partition(Players::Alpha, ALPHA_T, 3, 0),
+        new Partition(Players::Alpha, ALPHA_T, 4, 0)
     };
 
-    Partition* Beta[BETASIZE] = {
-        new Partition(Players::Beta, BETASIZE, 1, 0.1), //same type as ALPHA 
-        new Partition(Players::Beta, BETASIZE, 2, 0.2),
-        new Partition(Players::Beta, BETASIZE, 3, 0.3),
-        new Partition(Players::Beta, BETASIZE, 4, 0.4),
-        new Partition(Players::Beta, BETASIZE, 5, 0)
+    Partition* Beta[BETA_T] = {                           //creating new partitions for player BETA
+        new Partition(Players::Beta, BETA_T, 1, 0),
+        new Partition(Players::Beta, BETA_T, 2, 0.3),
+        new Partition(Players::Beta, BETA_T, 3, 0.3),
+        new Partition(Players::Beta, BETA_T, 4, 0.3),
+        new Partition(Players::Beta, BETA_T, 5, 0.1)
     };
 
-    join(Alpha, ALPHASIZE);
-    join(Beta, BETASIZE);
+    //removing useless partitions
+    join(Alpha, ALPHASIZE, ALPHA_T); 
+    join(Beta, BETASIZE, ALPHA_T);
 
-    create_tables(Alpha, ALPHASIZE);
-    create_tables(Beta, BETASIZE);
-    /* cout << Beta[0]->table << endl; */
+    //updating Partion arrays (size), creating a bit table for each partitions and moving nullptr elements at the back of the array
+    create_tables(Alpha, ALPHASIZE, ALPHA_T);
+    create_tables(Beta, BETASIZE, BETA_T);
 
+    //union of player partitions
     unsigned int alphau = 0;
     unsigned int betau = 0;
-
-    for (int i = 0; i < ALPHASIZE; i++)
-        if (Alpha[i] != NULL)
-            alphau = alphau | Alpha[i]->table;    
-        
-    for (int i = 0; i < BETASIZE; i++)
-        if (Beta[i] != NULL)
-            betau = betau | Beta[i]->table;
-
-
+    for (int i = 0; i < ALPHASIZE; i++)         //alpha
+        alphau = alphau | Alpha[i]->table;        
     
-    //column check
-    for (int o = 0; o < BETASIZE; o++)
+    for (int i = 0; i < BETASIZE; i++)          //beta
+        betau = betau | Beta[i]->table;
+    
+    //intersection of alpha and beta partitions (represents available space)
+    unsigned int intersection = alphau & betau;
+    
+
+    //reading columns of the intersection
+    double betares[BETASIZE];
+    for (int o = 0; o < BETASIZE; o++)                                                          //for each column
     {
-        double mid_res = 0;
-        for (int i = 0; i < ALPHASIZE; i++)
+        double mid_res = 0;                                                                     //  create a new empty result
+        for (int i = 0; i < ALPHASIZE; i++)                                                     //  for each line
         {   
-            unsigned int bit_check = (unsigned int) pow(2, i*BETASIZE) << BETASIZE - 1 - o;
-            if ((bit_check & betau) > 0)
+            unsigned int bit_check = (unsigned int) pow(2, i*BETASIZE) << BETASIZE - 1 - o;     //      create the checking bit
+            if ((bit_check & intersection) > 0)                                                 //      check if the checking bit AND the intersection are on (checking bit will always be on)
             {
-                mid_res += (*(event->subproba))[o + i*BETASIZE];
+                mid_res += (*(event->subproba))[o + i*BETASIZE];                                //          if it is read the event description and add it to the column result
             }
         }    
-        cout << 3-o << ": " << mid_res << endl;
+        betares[o] = mid_res;                                                                   //  update the result table with the column table
     }   
     
 
@@ -75,25 +85,71 @@ int main()
     return 0;
 }
 
-
-void join(Partition** part, unsigned int &size)
+//adjusting partition space by removing useless partitions and modifying partition size
+void join(Partition** part, unsigned int &size, const unsigned int t_size)
 {
     unsigned int size_copy = size;
     for (int n = 0; n < size_copy; n++)
     {   
-        if (part[n]->proba == 0)
+        if (part[n] != nullptr && part[n]->proba == 0 && n !=0)
         {
-            part[n] = NULL;
-            size--;
-        }    
+            delete part[n];     //deleting object (not necessary because you could keep the object in memory)
+            part[n] = nullptr;     //setting pointer to nullptr
+            size--;             //decrementing partition size count
+        } 
+        
+        else if (part[n] != nullptr && part[n]->proba == 0 && n == 0) //finding next none-null partition to serve as the table index
+        { 
+            int next_nn = 0;
+            while (part[next_nn] != nullptr)
+            {
+                
+                z++;
+                if (part[next_nn] != nullptr)
+                {
+                    Partition* buffer;
+                    buffer = part[n];
+                    part[n] = part[next_nn];
+                    part[next_nn] = buffer;
+                    delete part[next_nn];
+                    part[next_nn] = nullptr;
+                }
+            }
+            size--; 
+        }
+        
     }
 }
 
-void create_tables(Partition** part, unsigned int size)
+
+//correcting partitions by updating size, table and moving null elements at the back of the array
+void create_tables(Partition** part, unsigned int size, const unsigned int t_size) 
 {
+    int z = 0;
+    int null_index = -1;
+    do //moving null partitions to the end of the table
+    {
+        if (old >= 0 && part[z] != nullptr)
+        {
+            part[old] = part[z];
+            part[z] = nullptr;
+            
+            null_index = -1;
+            z = 0;
+        }
+
+        if (null_index < 0 && part[z] == nullptr)
+        {
+            null_index = z;
+        }
+        z++;
+    } while (z < t_size);
+    
     for (int n = 0; n < size; n++)
-    {   
-        part[n]->size = size;
-        part[n]->make_table();    
+    {
+        part[n]->update_si(size, n+1);   //adjusting number of partitions before creating the table
+        part[n]->make_table();          //creating table with adjusted partition size  
     }
 }
+
+double* beta_logic(const unsigned int intersection, Event* event, const unsigned int ALPHASIZE, const unsigned int BETASIZE)
