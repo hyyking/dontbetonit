@@ -65,22 +65,17 @@ int main()
     
 
     //reading columns of the intersection
-    double betares[BETASIZE];
-    for (int o = 0; o < BETASIZE; o++)                                                          //for each column
-    {
-        double mid_res = 0;                                                                     //  create a new empty result
-        for (int i = 0; i < ALPHASIZE; i++)                                                     //  for each line
-        {   
-            unsigned int bit_check = (unsigned int) pow(2, i*BETASIZE) << BETASIZE - 1 - o;     //      create the checking bit
-            if ((bit_check & intersection) > 0)                                                 //      check if the checking bit AND the intersection are on (checking bit will always be on)
-            {
-                mid_res += (*(event->subproba))[o + i*BETASIZE];                                //          if it is read the event description and add it to the column result
-            }
-        }    
-        betares[o] = mid_res;                                                                   //  update the result table with the column table
-    }   
+    double* beta_rest = beta_logic(intersection, event, ALPHASIZE, BETASIZE);
     
-
+    
+    
+    for (int i = 0; i < BETASIZE; i++)
+        delete Beta[i];
+    
+    for (int i = 0; i < ALPHASIZE; i++)
+        delete Alpha[i];
+    
+    free(beta_rest);
     free(event);
     return 0;
 }
@@ -104,7 +99,7 @@ void join(Partition** part, unsigned int &size, const unsigned int t_size)
             while (part[next_nn] != nullptr)
             {
                 
-                z++;
+                next_nn++;
                 if (part[next_nn] != nullptr)
                 {
                     Partition* buffer;
@@ -129,9 +124,9 @@ void create_tables(Partition** part, unsigned int size, const unsigned int t_siz
     int null_index = -1;
     do //moving null partitions to the end of the table
     {
-        if (old >= 0 && part[z] != nullptr)
+        if (null_index >= 0 && part[z] != nullptr)
         {
-            part[old] = part[z];
+            part[null_index] = part[z];
             part[z] = nullptr;
             
             null_index = -1;
@@ -152,4 +147,21 @@ void create_tables(Partition** part, unsigned int size, const unsigned int t_siz
     }
 }
 
-double* beta_logic(const unsigned int intersection, Event* event, const unsigned int ALPHASIZE, const unsigned int BETASIZE)
+double* beta_logic(const unsigned int intersection, Event* event, const unsigned int alpha_s, const unsigned int beta_s)
+{
+    double* betares = (double*) malloc(sizeof(double) * beta_s);
+    for (int o = 0; o < beta_s; o++)                                                          //for each column
+    {
+        double mid_res = 0;                                                                     //  create a new empty result
+        for (int i = 0; i < alpha_s; i++)                                                     //  for each line
+        {   
+            unsigned int bit_check = (unsigned int) pow(2, i*beta_s) << beta_s - 1 - o;     //      create the checking bit
+            if ((bit_check & intersection) > 0)                                                 //      check if the checking bit AND the intersection are on (checking bit will always be on)
+            {
+                mid_res += (*(event->subproba))[o + i*beta_s];                                //          if it is read the event description and add it to the column result
+            }
+        }    
+        betares[o] = mid_res;                                                                   //  update the result table with the column table
+    }
+    return betares;
+}
