@@ -1,9 +1,10 @@
 #include "bet.h"
 
 void join(Partition**, unsigned int &size, const unsigned int);
-void create_tables(Partition**, unsigned int, const unsigned int);
+void create_tables(Partition**, unsigned int, unsigned int, const unsigned int);
 
-double* beta_logic(const unsigned int, Event*, const unsigned int, const unsigned int);
+double* beta_logic(const unsigned long long, Event*, const unsigned int, const unsigned int);
+double* alpha_logic(const unsigned long long, Event*, const unsigned int, const unsigned int);
 
 
 const unsigned int ALPHA_T = 4; //(doesn't mean effective sizes, just describes how big the line table will be)
@@ -12,14 +13,14 @@ const unsigned int BETA_T = 5;  //(doesn't mean effective sizes, just describes 
 
 int main()
 {
-    unsigned int ALPHASIZE = ALPHA_T; //lines     (effective sizes)
-    unsigned int BETASIZE  = BETA_T; //columns   (effective sizess)
+    unsigned int ALPHASIZE = ALPHA_T; //lines     (effective sizes, will be modified dureing execution)
+    unsigned int BETASIZE  = BETA_T; //columns   (effective sizes, will be modified during execution)
 
     //Describing the event
     Event* event = (Event*) malloc(sizeof(Event));
     vector<double> event_description = {
-        /* 0.1, */ 0.1, 0.1, 0.1, 0.1,
-        /* 0.1,  */0.1, 0.1, 0.1, 0.1,
+        0.1, 0.1, 0.1, 0.1, 0.1,
+        0.1, 0.1, 0.1, 0.1, 0.1,
     };
     event->proba = 0.6;
     event->subproba = &event_description;
@@ -36,9 +37,9 @@ int main()
     };
 
     Partition* Beta[BETA_T] = {                           //creating new partitions for player BETA
-        new Partition(Players::Beta, BETA_T, 1, 0),
+        new Partition(Players::Beta, BETA_T, 1, 0.1),
         new Partition(Players::Beta, BETA_T, 2, 0.3),
-        new Partition(Players::Beta, BETA_T, 3, 0.3),
+        new Partition(Players::Beta, BETA_T, 3, 0.2),
         new Partition(Players::Beta, BETA_T, 4, 0.3),
         new Partition(Players::Beta, BETA_T, 5, 0.1)
     };
@@ -48,12 +49,15 @@ int main()
     join(Beta, BETASIZE, ALPHA_T);
 
     //updating Partion arrays (size), creating a bit table for each partitions and moving nullptr elements at the back of the array
-    create_tables(Alpha, ALPHASIZE, ALPHA_T);
-    create_tables(Beta, BETASIZE, BETA_T);
+    create_tables(Alpha, ALPHASIZE, BETASIZE, ALPHA_T);
+    create_tables(Beta, BETASIZE, ALPHASIZE, BETA_T);
+
+    Alpha[0]->table = 0;
+    Beta[0]->table = 0;
 
     //union of player partitions
-    unsigned int alphau = 0;
-    unsigned int betau = 0;
+    unsigned long long alphau = 0;
+    unsigned long long betau = 0;
     for (int i = 0; i < ALPHASIZE; i++)         //alpha
         alphau = alphau | Alpha[i]->table;        
     
@@ -61,21 +65,26 @@ int main()
         betau = betau | Beta[i]->table;
     
     //intersection of alpha and beta partitions (represents available space)
-    unsigned int intersection = alphau & betau;
-    
+    unsigned long long intersection = alphau & betau;
+    cout << alphau << "|" << betau << endl;
 
     //reading columns of the intersection
     double* beta_rest = beta_logic(intersection, event, ALPHASIZE, BETASIZE);
-    
-    
+    double* alpha_rest = alpha_logic(intersection, event, ALPHASIZE, BETASIZE);
+    cout << beta_rest[1] << endl;
+    cout << alpha_rest[1] << endl;    
     
     for (int i = 0; i < BETASIZE; i++)
         delete Beta[i];
+
     
     for (int i = 0; i < ALPHASIZE; i++)
         delete Alpha[i];
     
+    
     free(beta_rest);
+    free(alpha_rest);
+    
     free(event);
     return 0;
 }
@@ -118,7 +127,7 @@ void join(Partition** part, unsigned int &size, const unsigned int t_size)
 
 
 //correcting partitions by updating size, table and moving null elements at the back of the array
-void create_tables(Partition** part, unsigned int size, const unsigned int t_size) 
+void create_tables(Partition** part, unsigned int size, unsigned int o_size, const unsigned int t_size) 
 {
     int z = 0;
     int null_index = -1;
@@ -142,12 +151,15 @@ void create_tables(Partition** part, unsigned int size, const unsigned int t_siz
     
     for (int n = 0; n < size; n++)
     {
-        part[n]->update_si(size, n+1);   //adjusting number of partitions before creating the table
-        part[n]->make_table();          //creating table with adjusted partition size  
+        if (size > o_size)
+            part[n]->update_si(size, n+1);
+        else
+            part[n]->update_si(o_size, n+1);    //adjusting number of partitions before creating the table
+        part[n]->make_table();                  //creating table with adjusted partition size  
     }
 }
 
-double* beta_logic(const unsigned int intersection, Event* event, const unsigned int alpha_s, const unsigned int beta_s)
+double* beta_logic(const unsigned long long intersection, Event* event, const unsigned int alpha_s, const unsigned int beta_s)
 {
     double* betares = (double*) malloc(sizeof(double) * beta_s);
     for (int o = 0; o < beta_s; o++)                                                          //for each column
@@ -164,4 +176,23 @@ double* beta_logic(const unsigned int intersection, Event* event, const unsigned
         betares[o] = mid_res;                                                                   //  update the result table with the column table
     }
     return betares;
+}
+
+double* alpha_logic(const unsigned long long intersection, Event* event, const unsigned int alpha_s, const unsigned int beta_s)
+{
+    double* alphares = (double*) malloc(sizeof(double) * alpha_s);
+    for (int o = 0; o < alpha_s; o++)                                                          //for each column
+    {
+        double mid_res = 0;                                                                     //  create a new empty result
+        for (int i = 0; i < beta_s; i++)                                                     //  for each line
+        {   
+            unsigned int bit_check = (unsigned int) pow(2, i) << o*beta_s;     //      create the checking bit
+            if ((bit_check & intersection) > 0)                                                 //      check if the checking bit AND the intersection are on (checking bit will always be on)
+            {
+                mid_res += (*(event->subproba))[i];                                //          if it is read the event description and add it to the column result
+            }
+        }    
+        alphares[o] = mid_res;                                                                   //  update the result table with the column table
+    }
+    return alphares;
 }

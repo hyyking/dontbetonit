@@ -28,12 +28,12 @@ class Partition
 {
 private:
     Players type;
+    int index; 
+    int size;
+
 public:
-    int index; //  shoulde be private
-    int size; //should be private
-    
     double proba;
-    unsigned int table;
+    unsigned long long table;
 
     Partition(Players, int, int, double);
     void make_table();
