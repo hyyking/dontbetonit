@@ -1,4 +1,7 @@
-####Turn nb: 0
+# RESULT
+
+### Turn nb: 0
+
 alpha_rest[i]
 1 | 7: 0.8208
 2 | 56: 0.529091
@@ -8,7 +11,8 @@ beta_rest[i]
 2 | 146: 0.924
 3 | 73: 0.6
 
-####Turn nb: 1
+### Turn nb: 1
+
 alpha_rest[i]
 1 | 7: 0.8208
 2 | 56: 0.529091
@@ -18,7 +22,8 @@ beta_rest[i]
 2 | 146: 0.912
 3 | 73: 0.6
 
-####Turn nb: 2
+### Turn nb: 2
+
 alpha_rest[i]
 1 | 7: 0.1404
 2 | 56: 0.150909
