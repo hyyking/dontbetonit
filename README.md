@@ -1,5 +1,7 @@
 # RESULT
 
+reads: index | table (convert to binary): P(event|part(i))
+
 ### Turn nb: 0
 
 alpha_rest[i] </br>
