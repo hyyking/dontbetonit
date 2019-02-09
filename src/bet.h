@@ -28,10 +28,10 @@ class Partition
 {
 private:
     Players type;
-    int index; 
     int size;
 
 public:
+    int index; 
     double proba;
     uint64_t table;
 
